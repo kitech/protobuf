@@ -120,6 +120,11 @@ func (g *grpc) GenerateImports(file *generator.FileDescriptor) {
 	g.P(grpcPkg, " ", strconv.Quote(path.Join(g.gen.ImportPrefix, grpcPkgPath)))
 	g.P(")")
 	g.P()
+
+	g.P("import dstore \"dorpc/store\"")
+	g.P()
+	g.P("func init(){ dstore.ServiceDescs=append(dstore.ServiceDescs, GetServiceDesc())}")
+	g.P()
 }
 
 // reservedClientName records whether a client name is reserved on the client side.
@@ -195,6 +200,17 @@ func (g *grpc) generateService(file *generator.FileDescriptor, service *pb.Servi
 	// Server registration.
 	g.P("func Register", servName, "Server(s *", grpcPkg, ".Server, srv ", serverType, ") {")
 	g.P("s.RegisterService(&", serviceDescVar, `, srv)`)
+	g.P("}")
+	g.P()
+
+	// Server registration with callback.
+	g.P("func Register", servName, "ServerCallback(regfun func(*", grpcPkg, ".ServiceDesc)) {")
+	g.P("regfun(&", serviceDescVar, `)`)
+	g.P("}")
+	g.P()
+
+	g.P("func GetServiceDesc() *", grpcPkg, ".ServiceDesc{")
+	g.P("return &", serviceDescVar)
 	g.P("}")
 	g.P()
 
